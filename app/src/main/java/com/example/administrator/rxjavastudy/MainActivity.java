@@ -35,6 +35,14 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+        TextView mTvNestingUse = findViewById(R.id.tv_nesting_use);
+        mTvNestingUse.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this,NestingActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
 }
