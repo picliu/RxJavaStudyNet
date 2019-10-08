@@ -74,24 +74,18 @@ public class NestingActivity extends AppCompatActivity implements View.OnClickLi
 
                     @Override
                     public ObservableSource<Boolean> apply(final Boolean aBoolean) throws Exception {
-                        if (aBoolean) {
-                            return Observable.create(new ObservableOnSubscribe<Boolean>() {
-                                @Override
-                                public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
+                        return Observable.create(new ObservableOnSubscribe<Boolean>() {
+                            @Override
+                            public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
 
-                                    if (aBoolean) {
-                                        emitter.onNext(true);
-                                    } else {
-                                        emitter.onError(new Throwable("失败"));
-                                    }
-                                    Log.i(Constans.TAG, " 注册结束  开始登录 accept: Thread=" + Thread.currentThread().getName());
+                                if (aBoolean) {
+                                    emitter.onNext(true);
+                                } else {
+                                    emitter.onError(new Throwable("失败"));
                                 }
-                            });
-                        } else {
-
-                            return Observable.empty();
-                        }
-
+                                Log.i(Constans.TAG, " 注册结束  开始登录 accept: Thread=" + Thread.currentThread().getName());
+                            }
+                        });
                     }
                 })
                 .observeOn(AndroidSchedulers.mainThread())
@@ -106,7 +100,7 @@ public class NestingActivity extends AppCompatActivity implements View.OnClickLi
                     @Override
                     public void accept(Throwable throwable) throws Exception {
                         Toast.makeText(NestingActivity.this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
-                        Log.i(Constans.TAG, " 注册结束 登录结果 失败: Thread=" + Thread.currentThread().getName());
+                        Log.i(Constans.TAG, "  失败: Thread=" + Thread.currentThread().getName() + "  throwable=" + throwable.toString());
                     }
                 });
     }
