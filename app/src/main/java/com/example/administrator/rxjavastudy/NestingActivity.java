@@ -46,10 +46,12 @@ public class NestingActivity extends AppCompatActivity implements View.OnClickLi
         TextView mTvNesting = findViewById(R.id.tv_nesting);
         TextView mTvNestingForMap = findViewById(R.id.tv_nesting_for_map);
         TextView mTvNestingForFlatmap = findViewById(R.id.tv_nesting_for_flatmap);
+        TextView mTvNestingForConcatMap = findViewById(R.id.tv_nesting_for_concatMap);
         mTvNestingNormal.setOnClickListener(this);
         mTvNesting.setOnClickListener(this);
         mTvNestingForMap.setOnClickListener(this);
         mTvNestingForFlatmap.setOnClickListener(this);
+        mTvNestingForConcatMap.setOnClickListener(this);
     }
 
     @Override
@@ -67,7 +69,37 @@ public class NestingActivity extends AppCompatActivity implements View.OnClickLi
             case R.id.tv_nesting_for_flatmap:
                 initflat();
                 break;
+            case R.id.tv_nesting_for_concatMap:
+                initconcatMap();
+                break;
         }
+    }
+
+    private void initconcatMap() {
+        Observable.create(new ObservableOnSubscribe<String>() {
+            @Override
+            public void subscribe(ObservableEmitter<String> emitter) throws Exception {
+                emitter.onNext("1");
+                emitter.onNext("2");
+                emitter.onNext("3");
+                emitter.onComplete();
+            }
+        }).concatMap(new Function<String, ObservableSource<String>>() {
+            @Override
+            public ObservableSource<String> apply(String s) throws Exception {
+
+                final List<String> list = new ArrayList<>();
+                for (int i = 0; i < 3; i++) {
+                    list.add("I am value " + s);
+                }
+                return Observable.fromIterable(list).delay(10, TimeUnit.MILLISECONDS);
+            }
+        }).subscribe(new Consumer<String>() {
+            @Override
+            public void accept(String s) throws Exception {
+                Log.i(Constans.TAG, "accept: s=" + s);
+            }
+        });
     }
 
     private void initflat() {
@@ -83,6 +115,7 @@ public class NestingActivity extends AppCompatActivity implements View.OnClickLi
 //                emitter.onError(new Throwable("hahahah"));
                 emitter.onNext("4");
                 emitter.onNext("5");
+                emitter.onComplete();
 
             }
         }).flatMap(new Function<String, ObservableSource<String>>() {
@@ -94,7 +127,7 @@ public class NestingActivity extends AppCompatActivity implements View.OnClickLi
                 for (int i = 0; i < 3; i++) {
                     list.add("I am value " + s);
                 }
-                return Observable.fromIterable(list).delay(10,TimeUnit.MILLISECONDS);
+                return Observable.fromIterable(list).delay(10, TimeUnit.MILLISECONDS);
             }
         }).subscribe(new Consumer<String>() {
 
@@ -143,7 +176,7 @@ public class NestingActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     private void initflatMap() {
-        Disposable subscribe = Observable.create(new ObservableOnSubscribe<Boolean>() {
+        Observable.create(new ObservableOnSubscribe<Boolean>() {
 
             @Override
             public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
