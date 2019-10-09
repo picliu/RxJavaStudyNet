@@ -1,12 +1,18 @@
 package com.example.administrator.rxjavastudy;
 
 import android.os.Bundle;
+import android.os.HandlerThread;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -38,8 +44,12 @@ public class NestingActivity extends AppCompatActivity implements View.OnClickLi
     private void initView() {
         TextView mTvNestingNormal = findViewById(R.id.tv_nesting_normal);
         TextView mTvNesting = findViewById(R.id.tv_nesting);
+        TextView mTvNestingForMap = findViewById(R.id.tv_nesting_for_map);
+        TextView mTvNestingForFlatmap = findViewById(R.id.tv_nesting_for_flatmap);
         mTvNestingNormal.setOnClickListener(this);
         mTvNesting.setOnClickListener(this);
+        mTvNestingForMap.setOnClickListener(this);
+        mTvNestingForFlatmap.setOnClickListener(this);
     }
 
     @Override
@@ -49,12 +59,90 @@ public class NestingActivity extends AppCompatActivity implements View.OnClickLi
                 initNormal();
                 break;
             case R.id.tv_nesting:
+                initflatMap();
+                break;
+            case R.id.tv_nesting_for_map:
                 initMap();
+                break;
+            case R.id.tv_nesting_for_flatmap:
+                initflat();
                 break;
         }
     }
 
+    private void initflat() {
+        /**
+         * 发现 两次打印出来结果不一样，flatMap不保证事件顺序，如需保证顺序使用concatMap
+         */
+        Observable.create(new ObservableOnSubscribe<String>() {
+            @Override
+            public void subscribe(ObservableEmitter<String> emitter) throws Exception {
+                emitter.onNext("1");
+                emitter.onNext("2");
+                emitter.onNext("3");
+//                emitter.onError(new Throwable("hahahah"));
+                emitter.onNext("4");
+                emitter.onNext("5");
+
+            }
+        }).flatMap(new Function<String, ObservableSource<String>>() {
+
+            @Override
+            public ObservableSource<String> apply(final String s) throws Exception {
+
+                final List<String> list = new ArrayList<>();
+                for (int i = 0; i < 3; i++) {
+                    list.add("I am value " + s);
+                }
+                return Observable.fromIterable(list).delay(10,TimeUnit.MILLISECONDS);
+            }
+        }).subscribe(new Consumer<String>() {
+
+            @Override
+            public void accept(String s) throws Exception {
+                Log.i(Constans.TAG, "accept: s=" + s);
+            }
+        }, new Consumer<Throwable>() {
+            @Override
+            public void accept(Throwable throwable) throws Exception {
+                Log.i(Constans.TAG, "accept: throwable=" + throwable.toString());
+            }
+        });
+    }
+
     private void initMap() {
+        /**
+         * 个人对map的理解
+         * 上游发出的任何类型，经过map转换成其他类型，最后在下游返回
+         */
+        final List<String> arrayList = new ArrayList<>();
+        arrayList.clear();
+        Observable.create(new ObservableOnSubscribe<String>() {
+            @Override
+            public void subscribe(ObservableEmitter<String> emitter) throws Exception {
+                emitter.onNext("1");
+                emitter.onNext("2");
+                emitter.onNext("3");
+                emitter.onNext("4");
+            }
+        }).map(new Function<String, List<String>>() {
+            @Override
+            public List<String> apply(String s) throws Exception {
+                arrayList.add(s);
+                return arrayList;
+            }
+        }).subscribe(new Consumer<List<String>>() {
+            @Override
+            public void accept(List<String> list) throws Exception {
+                for (String s : list) {
+                    Log.i(Constans.TAG, "accept: s=" + s);
+                }
+
+            }
+        });
+    }
+
+    private void initflatMap() {
         Disposable subscribe = Observable.create(new ObservableOnSubscribe<Boolean>() {
 
             @Override
